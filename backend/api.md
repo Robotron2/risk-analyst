@@ -6,7 +6,7 @@ Base URL: `http://localhost:3000/api`
 
 ### POST `/analyze`
 
-Analyzes an RWA token using OpenAI. Implement caching logic so requests within a 24-hour window retrieve historical results, preventing duplicate calls.
+Analyzes an RWA token using Gemini. Implements caching logic so requests within a 24-hour window retrieve historical results, preventing duplicate calls. This endpoint is **non-blocking**. Listen to the WebSocket payload for results.
 
 **Request Body:**
 ```json
@@ -16,12 +16,20 @@ Analyzes an RWA token using OpenAI. Implement caching logic so requests within a
 }
 ```
 
-**Successful Response (201 Created or 200 OK):**
+**Successful Response (202 Accepted):**
+```json
+{
+  "status": "processing",
+  "tokenAddress": "0x1234567890abcdef1234567890abcdef12345678"
+}
+```
+
+**Cache Hit Response (200 OK):**
 ```json
 {
   "_id": "60d5ecb8b392d7001f8e4e1a",
   "tokenAddress": "0x1234567890abcdef1234567890abcdef12345678",
-  "chain": "hashkey",
+  "status": "completed",
   "riskScore": 25,
   "riskLevel": "Low",
   "summary": "AI generated assessment summary details.",
@@ -30,6 +38,17 @@ Analyzes an RWA token using OpenAI. Implement caching logic so requests within a
   "createdAt": "2024-05-15T10:00:00.000Z"
 }
 ```
+
+---
+
+### Websocket Subscriptions (`/`)
+
+To listen for completion, connect to WS and join the token's channel explicitly:
+
+**Events:**
+- Client `join(tokenAddress)`
+- Server `analysis_complete` -> payload: `{ tokenAddress, data: ReportObject }`
+- Server `analysis_failed` -> payload: `{ tokenAddress, error }`
 
 ---
 

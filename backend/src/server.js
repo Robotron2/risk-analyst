@@ -1,6 +1,8 @@
 require('dotenv').config();
+const http = require('http');
 const mongoose = require('mongoose');
 const app = require('./app');
+const { initSocket } = require('./config/socket');
 
 // Ensure error handler for unhandled rejections/exceptions
 process.on('uncaughtException', err => {
@@ -20,8 +22,13 @@ mongoose
   });
 
 const port = process.env.PORT || 3000;
-const server = app.listen(port, () => {
-  console.log(`App running on port ${port}...`);
+const server = http.createServer(app);
+
+// Initialize WebSocket
+initSocket(server);
+
+server.listen(port, () => {
+  console.log(`Server running on port ${port}...`);
 });
 
 process.on('unhandledRejection', err => {

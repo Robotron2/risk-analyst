@@ -7,6 +7,8 @@ const { AppError } = require('../utils/errors');
 // In-memory lock to prevent concurrent AI calls for the same token
 const activeAnalysisLocks = new Map();
 
+const { processAnalysis } = require('../services/analysis.processor');
+
 exports.analyzeToken = async (req, res, next) => {
   try {
     const { tokenAddress, chain = 'hashkey' } = req.body;
@@ -17,48 +19,44 @@ exports.analyzeToken = async (req, res, next) => {
 
     const normalizedAddress = tokenAddress.toLowerCase();
 
-    // 1. Check Cache
-    const freshReport = await cacheService.getFreshReport(normalizedAddress);
-    if (freshReport) {
-      return res.status(200).json(freshReport);
+    // 1. Check Cache first (Latest report)
+    const latestReport = await Report.getLatestReport(normalizedAddress);
+
+    if (latestReport) {
+      if (latestReport.status === 'processing') {
+        return res.status(202).json({
+          status: 'processing',
+          tokenAddress: normalizedAddress
+        });
+      }
+      
+      if (latestReport.status === 'completed' && latestReport.isFresh()) {
+        return res.status(200).json(latestReport);
+      }
     }
 
-    // 2. Concurrency Lock Check
-    if (activeAnalysisLocks.has(normalizedAddress)) {
-      const result = await activeAnalysisLocks.get(normalizedAddress);
-      return res.status(200).json(result);
-    }
+    // 2. Create a preliminary Processing Record
+    // Since we maintain history, we can just create a new processing report entry
+    const processingRecord = await Report.create({
+      tokenAddress: normalizedAddress,
+      chain,
+      status: 'processing',
+      riskScore: 0, // defaults until fulfilled
+      riskLevel: 'Medium',
+      summary: 'Analysis in progress...',
+      recommendation: 'Please wait'
+    });
 
-    // Process analysis inside a lock
-    const analysisPromise = (async () => {
-       try {
-           // 3. Fetch Real Token Data via Explorer Service
-           const normalizedPayload = await explorerService.fetchTokenData(normalizedAddress);
+    // 3. Initiate Non-Blocking Background Processor
+    setImmediate(() => {
+      processAnalysis(normalizedAddress);
+    });
 
-           // 4. Call AI Service with Explorer Data
-           const aiResult = await aiService.analyzeToken(normalizedPayload);
-
-           // 5. Save NEW Record
-           const newReport = await Report.create({
-               tokenAddress: normalizedAddress,
-               chain,
-               source: 'hashkey_explorer',
-               activityLevel: normalizedPayload.activity_level,
-               transactionCount: normalizedPayload.transaction_count,
-               signals: normalizedPayload.signals,
-               ...aiResult
-           });
-           
-           return newReport;
-       } finally {
-           activeAnalysisLocks.delete(normalizedAddress);
-       }
-    })();
-
-    activeAnalysisLocks.set(normalizedAddress, analysisPromise);
-    const result = await analysisPromise;
-
-    res.status(201).json(result);
+    // 4. Return Accept Response
+    res.status(202).json({
+      status: 'processing',
+      tokenAddress: normalizedAddress
+    });
   } catch (error) {
     next(error);
   }

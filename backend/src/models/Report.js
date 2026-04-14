@@ -39,6 +39,11 @@ const reportSchema = new mongoose.Schema({
   activityLevel: String,
   transactionCount: Number,
   signals: [String],
+  status: {
+    type: String,
+    enum: ['processing', 'completed', 'failed'],
+    default: 'completed'
+  },
   createdAt: {
     type: Date,
     default: Date.now
