@@ -20,12 +20,14 @@ import {
   TrendingUp,
   Droplets,
   DollarSign,
+  Loader2,
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import OnChainModal from '../components/OnChainModal';
 import { useReports } from '../contexts/ReportContext';
 import { mockReports } from '../data/mockData';
+import { useOnChainAnalysis } from '../hooks/useOnChainAnalysis';
 
 const performanceData = [
   { month: 'Sep', token: 78, benchmark: 72 },
@@ -44,6 +46,11 @@ export default function RiskReport() {
   const [showOnChainModal, setShowOnChainModal] = useState(false);
 
   const report = getReportById(id || '') || mockReports[0];
+
+  // Read on-chain data for this token
+  const { analysis: onChainData, isLoading: onChainLoading } = useOnChainAnalysis(
+    report.contractAddress
+  );
 
   const getRiskColor = (score: number) => {
     if (score <= 30) return 'var(--color-risk-low)';
@@ -320,6 +327,51 @@ export default function RiskReport() {
             </button>
           </Card>
 
+          {/* On-Chain Record */}
+          <Card padding="lg">
+            <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">On-Chain Record</h3>
+            {onChainLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-5 h-5 animate-spin text-[var(--color-primary)]" />
+              </div>
+            ) : onChainData ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
+                  <span className="text-xs text-[var(--color-text-muted)]">Score</span>
+                  <span className="text-xs font-semibold text-[var(--color-text)]">
+                    {onChainData.riskScore}/100
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
+                  <span className="text-xs text-[var(--color-text-muted)]">Level</span>
+                  <span className="text-xs font-medium text-[var(--color-text)]">
+                    {onChainData.riskLevel}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
+                  <span className="text-xs text-[var(--color-text-muted)]">Reporter</span>
+                  <span className="text-xs font-mono text-[var(--color-text)]">
+                    {onChainData.reporter.slice(0, 6)}...{onChainData.reporter.slice(-4)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-xs text-[var(--color-text-muted)]">Timestamp</span>
+                  <span className="text-xs text-[var(--color-text)]">
+                    {new Date(Number(onChainData.timestamp) * 1000).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-[var(--color-text-muted)] text-center py-4">
+                No on-chain record exists yet for this token.
+              </p>
+            )}
+          </Card>
+
           {/* Risk Breakdown Mini */}
           <Card padding="lg">
             <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4">Risk Category Breakdown</h3>
@@ -357,9 +409,10 @@ export default function RiskReport() {
       <OnChainModal
         isOpen={showOnChainModal}
         onClose={() => setShowOnChainModal(false)}
-        data={report.onChain}
+        tokenAddress={report.contractAddress}
         tokenName={report.tokenName}
         riskScore={report.riskScore}
+        riskLevel={report.riskLevel === 'low' ? 'Low' : report.riskLevel === 'medium' ? 'Medium' : 'High'}
       />
     </div>
   );

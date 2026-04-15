@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Bar chart bars -->
+  <rect x="20" y="120" width="30" height="60" rx="6" fill="#2563EB"/>
+  <rect x="60" y="85" width="30" height="95" rx="6" fill="#4F46E5"/>
+  <rect x="100" y="55" width="30" height="125" rx="6" fill="#2563EB"/>
+  
+  <!-- Line graph -->
+  <polyline points="35,105 75,70 115,40 155,55" stroke="#0F172A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Data points -->
+  <circle cx="35" cy="105" r="8" fill="#4F46E5"/>
+  <circle cx="75" cy="70" r="8" fill="#2563EB"/>
+  <circle cx="115" cy="40" r="8" fill="#06B6D4"/>
+  <circle cx="155" cy="55" r="8" fill="#06B6D4"/>
+  
+  <!-- Connecting dots to bars -->
+  <line x1="155" y1="55" x2="155" y2="95" stroke="#06B6D4" stroke-width="3" stroke-dasharray="4,4"/>
+  <rect x="140" y="95" width="30" height="85" rx="6" fill="#06B6D4"/>
+</svg>

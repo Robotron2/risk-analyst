@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { socket } from '../lib/socket';
-import { analyzeToken as apiAnalyze, getReportByAddress } from '../services/api';
+import { analyzeToken as apiAnalyze, getReport } from '../services/api';
 
 // ---- Types ----
 export type AnalysisStatus = 'idle' | 'processing' | 'completed' | 'failed';
@@ -18,7 +18,7 @@ interface AnalysisContextType {
   currentToken: string | null;
   analysisData: AnalysisResult | null;
   error: string | null;
-  startAnalysis: (tokenAddress: string, network: string) => Promise<void>;
+  startAnalysis: (tokenAddress: string, chain?: string) => Promise<void>;
   resetAnalysis: () => void;
   fetchFallbackReport: (tokenAddress: string) => Promise<void>;
 }
@@ -85,7 +85,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   }, [currentToken]);
 
   // ---- Actions ----
-  const startAnalysis = useCallback(async (tokenAddress: string, network: string) => {
+  const startAnalysis = useCallback(async (tokenAddress: string, chain: string = 'hashkey') => {
     // Reset state
     processedRef.current.delete(tokenAddress);
     setCurrentToken(tokenAddress);
@@ -97,7 +97,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     socket.emit('join', tokenAddress);
 
     try {
-      await apiAnalyze(tokenAddress, network);
+      await apiAnalyze(tokenAddress, chain);
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to initiate analysis. Backend may be offline.');
       setStatus('failed');
@@ -113,9 +113,16 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
 
   const fetchFallbackReport = useCallback(async (tokenAddress: string) => {
     try {
-      const data = await getReportByAddress(tokenAddress);
-      if (data) {
-        setAnalysisData(data);
+      const data = await getReport(tokenAddress);
+      if (data && !data.error) {
+        // Map backend fields to AnalysisResult shape
+        setAnalysisData({
+          risk_score: data.riskScore,
+          risk_level: data.riskLevel,
+          summary: data.summary,
+          compliance_flags: data.complianceFlags || [],
+          institutional_recommendation: data.recommendation || '',
+        });
         setStatus('completed');
       }
     } catch {

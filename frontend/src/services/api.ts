@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -33,28 +33,35 @@ api.interceptors.response.use(
   }
 );
 
-export const analyzeToken = async (contractAddress: string, network: string) => {
-  const response = await api.post('/analyze', { contractAddress, network });
+// POST /analyze — backend expects { tokenAddress, chain }
+export const analyzeToken = async (tokenAddress: string, chain: string = 'hashkey') => {
+  const response = await api.post('/analyze', { tokenAddress, chain });
   return response.data;
 };
 
-export const getReportById = async (id: string) => {
-  const response = await api.get(`/report/${id}`);
-  return response.data;
-};
-
-export const getReportByAddress = async (tokenAddress: string) => {
+// GET /report/:tokenAddress — returns latest report + historicalCount
+export const getReport = async (tokenAddress: string) => {
   const response = await api.get(`/report/${tokenAddress}`);
   return response.data;
 };
 
-export const getAllReports = async () => {
-  const response = await api.get('/reports');
+// Alias for backward compatibility
+export const getReportById = getReport;
+export const getReportByAddress = getReport;
+
+// GET /history/:tokenAddress — returns array of all historical reports
+export const getHistory = async (tokenAddress: string) => {
+  const response = await api.get(`/history/${tokenAddress}`);
   return response.data;
 };
 
-export const getHistory = async () => {
-  const response = await api.get('/history');
+// POST /log-onchain — validates payload before on-chain tx
+export const validateOnchainPayload = async (payload: {
+  tokenAddress: string;
+  riskScore: number;
+  riskLevel: string;
+}) => {
+  const response = await api.post('/log-onchain', payload);
   return response.data;
 };
 

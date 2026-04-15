@@ -28,7 +28,7 @@ const analysisSteps = [
 ];
 
 export default function AnalyzeToken() {
-  const [address, setAddress] = useState('');
+  const [tokenAddress, setTokenAddress] = useState('');
   const [tokenName, setTokenName] = useState('');
   const [notes, setNotes] = useState('');
   const [network, setNetwork] = useState('hashkey');
@@ -90,17 +90,17 @@ export default function AnalyzeToken() {
     e.preventDefault();
     setFormError('');
 
-    if (!address) {
+    if (!tokenAddress) {
       setFormError('Contract address is required');
       return;
     }
 
-    if (!isValidAddress(address)) {
+    if (!isValidAddress(tokenAddress)) {
       setFormError('Invalid contract address format. Must be 0x followed by 40 hex characters.');
       return;
     }
 
-    await startAnalysis(address, network);
+    await startAnalysis(tokenAddress, network);
   };
 
   const handleRetry = () => {
@@ -111,7 +111,7 @@ export default function AnalyzeToken() {
 
   const handleNewAnalysis = () => {
     resetAnalysis();
-    setAddress('');
+    setTokenAddress('');
     setTokenName('');
     setNotes('');
   };
@@ -148,10 +148,10 @@ export default function AnalyzeToken() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-[var(--color-text)] truncate">
-                  {tokenName || `Token ${address.slice(0, 8)}...`}
+                  {tokenName || `Token ${tokenAddress.slice(0, 8)}...`}
                 </p>
                 <p className="text-[11px] font-mono text-[var(--color-text-muted)] truncate">
-                  {address}
+                  {tokenAddress}
                 </p>
               </div>
             </div>
@@ -414,9 +414,9 @@ export default function AnalyzeToken() {
               <input
                 type="text"
                 placeholder="0x..."
-                value={address}
+                value={tokenAddress }
                 onChange={(e) => {
-                  setAddress(e.target.value);
+                  setTokenAddress(e.target.value);
                   setFormError('');
                 }}
                 className="w-full bg-transparent text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none"
