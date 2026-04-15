@@ -15,6 +15,15 @@ app.use(cors());
 // Body parser
 app.use(express.json({ limit: '10kb' }));
 
+// Home route — server status
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'active',
+    service: 'RWA Token Risk Analyzer API',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // API Routes
 app.use('/api', apiRoutes);
 
