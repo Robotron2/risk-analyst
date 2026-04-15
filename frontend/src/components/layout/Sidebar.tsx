@@ -6,9 +6,9 @@ import {
   FileText,
   Clock,
   Settings,
-  Shield,
   X,
 } from 'lucide-react';
+import Logo from '../ui/Logo';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -45,15 +45,8 @@ export default function Sidebar() {
       >
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-[var(--color-border)]">
-          <Link to="/" onClick={close} className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[var(--color-primary)] flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-[15px] font-bold text-[var(--color-text)] leading-tight">
-                RWA Risk Analyzer
-              </h1>
-            </div>
+          <Link to="/" onClick={close}>
+            <Logo size="md" />
           </Link>
           <button
             onClick={close}
@@ -66,9 +59,7 @@ export default function Sidebar() {
         {/* Risk Engine Badge */}
         <div className="px-5 py-4">
           <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[var(--color-primary-bg)] border border-[var(--color-primary)]/20">
-            <div className="w-7 h-7 rounded-lg bg-[var(--color-primary)] flex items-center justify-center">
-              <Shield className="w-3.5 h-3.5 text-white" />
-            </div>
+            <Logo size="sm" showText={false} />
             <div>
               <p className="text-xs font-semibold text-[var(--color-primary)]">Risk Engine</p>
               <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">Enterprise Tier</p>
