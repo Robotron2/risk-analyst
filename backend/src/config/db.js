@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 require("dotenv").config()
 
-const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/tka"
+const mongoURI = process.env.MONGODB_URI
 
 let cached = global.mongoose
 
